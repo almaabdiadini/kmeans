@@ -10,7 +10,7 @@ class Prosesdata extends Super
         parent::__construct();
         $this->language       = 'english'; /** Indonesian / english **/
         $this->tema           = "flexigrid"; /** datatables / flexigrid **/
-        $this->tabel          = "data_rfm";
+        $this->tabel          = "data_proses";
         $this->active_id_menu = "Proses Data";
         $this->nama_view      = "Proses Data";
         $this->status         = true; 
@@ -26,8 +26,13 @@ class Prosesdata extends Super
 
     function index(){
             $data = [];
-            if($this->crud->getState()=="list")
+            if($this->crud->getState()=="add")
                 redirect(base_url('admin/Prosesdata/proses'));
+
+            if($this->crud->getState()=="read")
+                redirect(base_url('admin/Prosesdata/tampil/'.$this->uri->segment(5)));
+                // var_dump($this->crud->getState()); exit();
+                
             /** Bagian GROCERY CRUD USER**/
 
 
@@ -82,20 +87,104 @@ class Prosesdata extends Super
         if ($_FILES["filecsv"]["size"] > 0) {
         
             $file = fopen($fileName, "r");
-            
-            while (($column = fgetcsv($file, 10000, ",")) !== FALSE) {
-                $sqlInsert = "INSERT into data_rfm (tgl,nama_team,total_harga)
-                       values ('" .$column[0] . "','" . $column[1] . "','" . $column[2] . "')";
-                $result = $this->db->query($sqlInsert);
-                
-                if (! empty($result)) {
-                    $type = "success";
-                    $message = "CSV Data Imported into the Database";
-                } else {
-                    $type = "error";
-                    $message = "Problem in Importing CSV Data";
-                }
+            $csv = array_map('str_getcsv', file($fileName));
+            array_shift($csv); # remove column header
+
+            $total = count($csv);
+
+            $tgl_proses = $this->input->post('tgl_proses');
+            $judul = $this->input->post('judul');
+
+            $this->db->set('judul',$judul);
+            $this->db->set('tgl_proses',$tgl_proses);
+            $this->db->insert('data_proses');
+
+            $id_proses = $this->db->insert_id();
+
+            for($i=0; $i < $total; $i++){
+                $teks[$i]  = $csv[$i]; //mengambil baris array
+                $baris[$i] = implode($teks[$i]);//merubah baris array menjadi string
+                $pecah = explode(";", $baris[$i]);//untuk memecah baris menjadi array berdasarkan pemisah dengan tanda ;
+                $this->db->set('id_proses', $id_proses);
+                $this->db->set('tgl', $pecah[0]);
+                $this->db->set('nama_team', $pecah[1]);
+                $this->db->set('total_harga', $pecah[2]);
+                $this->db->insert('data_rfm');
             }
+           
+            redirect(base_url('admin/Prosesdata'));
+
+
         }
+    }
+    public function tampil($id_proses){
+
+       $getData =  $this->db->query("SELECT DISTINCT nama_team FROM data_rfm where id_proses='".$id_proses."'")->result();
+
+       $totalM =[];
+       $totalR = [];
+       $totalF = [];
+       $team = [];
+       $no = 0;
+       $data = [];
+       foreach ($getData as $key) {
+           $this->db->where('nama_team',$key->nama_team);
+           $this->db->where('id_proses',$id_proses);
+           $getTeam = $this->db->get('data_rfm');
+           $rowTeam = $getTeam->result();
+
+           $team[$no] = $key->nama_team;
+            
+            //total nilai M
+           $total = 0;
+           foreach ($rowTeam as $row) {
+               $total = $total + $row->total_harga;
+           }
+
+           $totalM[$no] = $this->bobotM($total);
+           //batas mencari total M
+
+           //mencari F
+           $rowTeam[$no] = $this->db->query("SELECT DISTINCT tgl FROM data_rfm WHERE nama_team = '".$team[$no]."' AND id_proses = '".$id_proses."'")->num_rows();
+            $totalF[$no] = $this->bobotF($rowTeam[$no]);
+           //Batas mencari F
+
+            //mencari R
+
+            $this->db->where('nama_team',$key->nama_team);
+            $this->db->where('id_proses',$id_proses);
+            $this->db->limit(1);
+            $this->db->order_by('tgl','DESC');
+            $getTanggal = $this->db->get('data_rfm')->row();
+
+            $totalR[$no] = $getTanggal->tgl;
+            //batas R
+
+           $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
+        $no++;
+       }
+    var_dump($data); exit();
+    }
+
+    public function bobotM($bobotTeam){
+
+        $getBobotM = $this->db->query('SELECT * FROM kriteria_m WHERE batas_awal <= "'.$bobotTeam.'" AND "'.$bobotTeam.'" <= batas_akhir')->row();
+
+        $hasil = $getBobotM->bobot_m;
+
+        // var_dump($hasil); exit();
+
+        return $hasil;
+    }
+
+    public function bobotF($bobotTeam){
+
+        $getBobotF = $this->db->query('SELECT * FROM kriteria_f WHERE batas_awal <= "'.$bobotTeam.'" AND "'.$bobotTeam.'" <= batas_akhir')->row();
+
+        $hasil = $getBobotF->bobot_f;
+
+        // var_dump($hasil); exit();
+
+        return $hasil;
     }
 }
