@@ -171,15 +171,28 @@ class Prosesdata extends Super
                     'f'=>$totalF[$no],
                     'm'=>$totalM[$no]
                     );
+            $c[$no] = array(
+                    'nama'=>$team[$no],
+                    'r'=>$totalR[$no],
+                    'f'=>$totalF[$no],
+                    'm'=>$totalM[$no]
+                    );
 
            // $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
            // $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
         $no++;
        }
-       shuffle($data);
-       $c1 = $data[1];
-       $c2 = $data[2];
-    var_dump($data); exit();
+
+       shuffle($c);
+       $c1 = $c[1];
+       $c2 = $c[2];
+
+       $totalBaris = count($data);
+       for ($i=0; $i < $totalBaris; $i++) { 
+           $hasilC1[$i] = round(sqrt((($c[1]['r']-$data[$i]['r'])^2) + (($c[1]['f']-$data[$i]['f'])^2) + (($c[1]['m']-$data[$i]['m'])^2)),2);
+           $hasilC2[$i] = round(sqrt((($c[2]['r']-$data[$i]['r'])^2) + (($c[2]['f']-$data[$i]['f'])^2) + (($c[2]['m']-$data[$i]['m'])^2)),2);
+       }
+    var_dump($hasilC2); exit();
     }
 
     public function bobotM($bobotTeam){
