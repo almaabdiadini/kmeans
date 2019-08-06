@@ -193,6 +193,7 @@ class Prosesdata extends Super
            $hasilC2[$i] = round(sqrt((($c[2]['r']-$data[$i]['r'])^2) + (($c[2]['f']-$data[$i]['f'])^2) + (($c[2]['m']-$data[$i]['m'])^2)),2);
        }
     var_dump($hasilC2); exit();
+    //baru
     }
 
     public function bobotM($bobotTeam){
