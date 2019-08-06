@@ -95,6 +95,7 @@ class Prosesdata extends Super
             $tgl_proses = $this->input->post('tgl_proses');
             $judul = $this->input->post('judul');
 
+            // var_dump($csv); exit();
             $this->db->set('judul',$judul);
             $this->db->set('tgl_proses',$tgl_proses);
             $this->db->insert('data_proses');
@@ -120,6 +121,9 @@ class Prosesdata extends Super
     public function tampil($id_proses){
 
        $getData =  $this->db->query("SELECT DISTINCT nama_team FROM data_rfm where id_proses='".$id_proses."'")->result();
+        $this->db->where('id_proses',$id_proses);
+       $getProses = $this->db->get('data_proses')->row();
+       $tgl_proses = $getProses->tgl_proses;
 
        $totalM =[];
        $totalR = [];
@@ -128,7 +132,7 @@ class Prosesdata extends Super
        $no = 0;
        $data = [];
        foreach ($getData as $key) {
-           $this->db->where('nama_team',$key->nama_team);
+           $this->db->where('nama_team','SAMBA');
            $this->db->where('id_proses',$id_proses);
            $getTeam = $this->db->get('data_rfm');
            $rowTeam = $getTeam->result();
@@ -157,12 +161,24 @@ class Prosesdata extends Super
             $this->db->order_by('tgl','DESC');
             $getTanggal = $this->db->get('data_rfm')->row();
 
-            $totalR[$no] = $getTanggal->tgl;
-            //batas R
+            $nilaiR[$no] = $getTanggal->tgl;
 
-           $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
+            $totalR[$no] = $this->bobotR($nilaiR[$no], $tgl_proses);
+            //batas R
+            $data[$no] = array(
+                    'nama'=>$team[$no],
+                    'r'=>$totalR[$no],
+                    'f'=>$totalF[$no],
+                    'm'=>$totalM[$no]
+                    );
+
+           // $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
+           // $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
         $no++;
        }
+       shuffle($data);
+       $c1 = $data[1];
+       $c2 = $data[2];
     var_dump($data); exit();
     }
 
@@ -186,5 +202,17 @@ class Prosesdata extends Super
         // var_dump($hasil); exit();
 
         return $hasil;
+    }
+
+    public function bobotR($bobotTeam, $tgl_proses){
+        $tgl_awal = new DateTime($bobotTeam);
+        $dateNow = new DateTime($tgl_proses);
+        $lama = $dateNow->diff($tgl_awal)->format("%a");
+
+        $getBobotR = $this->db->query('SELECT * FROM kriteria_r WHERE batas_awal <= "'.$lama.'" AND "'.$lama.'" <= batas_akhir')->row();
+
+        $hasil = $getBobotR->bobot_r;
+        return $hasil;
+        // var_dump($lama); die();
     }
 }
