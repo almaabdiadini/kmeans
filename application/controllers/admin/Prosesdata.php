@@ -91,7 +91,7 @@ class Prosesdata extends Super
             array_shift($csv); # remove column header
 
             $total = count($csv);
-
+            // var_dump($total); die();
             $tgl_proses = $this->input->post('tgl_proses');
             $judul = $this->input->post('judul');
 
@@ -106,12 +106,14 @@ class Prosesdata extends Super
                 $teks[$i]  = $csv[$i]; //mengambil baris array
                 $baris[$i] = implode($teks[$i]);//merubah baris array menjadi string
                 $pecah = explode(";", $baris[$i]);//untuk memecah baris menjadi array berdasarkan pemisah dengan tanda ;
+                // var_dump($pecah)
                 $this->db->set('id_proses', $id_proses);
                 $this->db->set('tgl', $pecah[0]);
                 $this->db->set('nama_team', $pecah[1]);
                 $this->db->set('total_harga', $pecah[2]);
                 $this->db->insert('data_rfm');
             }
+            // var_dump($total); die();
 
             $this->tampil($id_proses);
            
@@ -134,7 +136,10 @@ class Prosesdata extends Super
        $no = 0;
        $data = [];
        foreach ($getData as $key) {
-           $this->db->where('nama_team','SAMBA');
+           $team[$no] = $key->nama_team;
+           // echo "{$team[$no]}<br>";
+           // $this->db->where('nama_team','DINDIN');
+           $this->db->where('nama_team',$team[$no]);
            $this->db->where('id_proses',$id_proses);
            $getTeam = $this->db->get('data_rfm');
            $rowTeam = $getTeam->result();
@@ -150,7 +155,7 @@ class Prosesdata extends Super
            $totalM[$no] = $this->bobotM($total);
            //batas mencari total M
 
-           //mencari F
+            //mencari F
            $rowTeam[$no] = $this->db->query("SELECT DISTINCT tgl FROM data_rfm WHERE nama_team = '".$team[$no]."' AND id_proses = '".$id_proses."'")->num_rows();
             $totalF[$no] = $this->bobotF($rowTeam[$no]);
            //Batas mencari F
@@ -184,7 +189,7 @@ class Prosesdata extends Super
            // $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
         $no++;
        }
-
+       // var_dump($data); exit();
        shuffle($c);
        $c1 = $c[1];
        $c2 = $c[2];
@@ -312,7 +317,7 @@ class Prosesdata extends Super
                     'm'=>$totalM[$no]
                     );
             //array           
-
+            // $data[$no] = "Nama :".$team[$no]." R:".$totalR[$no]." F:".$totalF[$no]." M:".$totalM[$no];
             $no++;
         }
         //mengambil c1
