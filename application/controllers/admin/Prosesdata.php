@@ -45,8 +45,8 @@ class Prosesdata extends Super
             // $this->crud->set_field_upload('nama_field_upload',$this->folder_upload);  
             
             /** Ubah Nama yang akan ditampilkan**/
-            // $this->crud->display_as('nama','Nama Setelah di Edit')
-            //     ->display_as('email','Email Setelah di Edit'); 
+            // ->display_as('nama','Nama Setelah di Edit')
+            $this->crud->display_as('tgl_proses','Tanggal batas akhir'); 
             
             /** Akhir Bagian GROCERY CRUD Edit Oleh User**/
             $data = array_merge($data,$this->generateBreadcumbs());
@@ -96,8 +96,11 @@ class Prosesdata extends Super
             $judul = $this->input->post('judul');
 
             // var_dump($csv); exit();
+            $dateNow = date('Y-m-d H:i:s');
             $this->db->set('judul',$judul);
             $this->db->set('tgl_proses',$tgl_proses);
+            $this->db->set('waktu_proses',$dateNow);
+            $this->db->set('status_proses','Belum diproses');
             $this->db->insert('data_proses');
 
             $id_proses = $this->db->insert_id();
@@ -113,7 +116,7 @@ class Prosesdata extends Super
                 $this->db->insert('data_rfm');
             }
 
-            $this->tampil($id_proses);
+            $this->tampil($id_proses); // untuk mengambil c1 dan c2
            
             redirect(base_url('admin/Prosesdata'));
 
@@ -121,6 +124,8 @@ class Prosesdata extends Super
         }
     }
     public function tampil($id_proses){
+
+
 
        $getData =  $this->db->query("SELECT DISTINCT nama_team FROM data_rfm where id_proses='".$id_proses."'")->result();
         $this->db->where('id_proses',$id_proses);
@@ -251,122 +256,114 @@ class Prosesdata extends Super
     }
 
     public function iterasi($id_proses){
-        $getData =  $this->db->query("SELECT DISTINCT nama_team FROM data_rfm where id_proses='".$id_proses."'")->result();
-        $this->db->where('id_proses',$id_proses);
-       $getProses = $this->db->get('data_proses')->row();
-       $tgl_proses = $getProses->tgl_proses;
-       // print_r($getData);
-       $totalM =[];
-       $totalR = [];
-       $totalF = [];
-       $team = [];
-       $no = 0;
-       $data = [];
-       $id_data = [];
-       foreach ($getData as $key) {
-           $team[$no] = $key->nama_team;
-           // echo "{$team[$no]}<br>";
-           // $this->db->where('nama_team','DINDIN');
-           $this->db->where('nama_team',$team[$no]);
-           $this->db->where('id_proses',$id_proses);
-           $getTeam = $this->db->get('data_rfm');
-           $rowTeam = $getTeam->result();
-            //total nilai M
-           $total = 0;
-           foreach ($rowTeam as $row) {
-               $total = $total + $row->total_harga;
-           }
 
+      $this->db->where('id_proses',$id_proses);
+      $getDataProses = $this->db->get('data_proses')->row();
+      $status_proses = $getDataProses->status_proses;
 
-           // echo "{$total}<br>"; 
-
-           $totalM[$no] = $this->bobotM($total);
-           // echo "{$totalM[$no]}<br>";
-           //batas mencari total M
-
-           //mencari F
-           $rowTeam[$no] = $this->db->query("SELECT DISTINCT tgl FROM data_rfm WHERE nama_team = '".$team[$no]."' AND id_proses = '".$id_proses."'")->num_rows();
-            $totalF[$no] = $this->bobotF($rowTeam[$no]);
-           // echo "{$totalF[$no]}<br>";
-           //Batas mencari F
-
-            //mencari R
-
-            $this->db->where('nama_team',$key->nama_team);
-            $this->db->where('id_proses',$id_proses);
-            $this->db->limit(1);
-            $this->db->order_by('tgl','DESC');
-            $getTanggal = $this->db->get('data_rfm')->row();
-
-            $nilaiR[$no] = $getTanggal->tgl;
-
-            $totalR[$no] = $this->bobotR($nilaiR[$no], $tgl_proses);
-            // echo "{$totalR[$no]}<br>";
-            //batas R
-
-            //array
-            $data[$no] = array(
-                    'nama'=>$team[$no],
-                    'r'=>$totalR[$no],
-                    'f'=>$totalF[$no],
-                    'm'=>$totalM[$no]
-                    );
-            //array           
-
-            $no++;
-        }
-        //mengambil c1
-        $this->db->where('id_proses',$id_proses);
-        $this->db->where('tipe',"C1");
-        $C1 = $this->db->get('centroid_data')->row();
-        //mengambil c2
-        $this->db->where('id_proses',$id_proses);
-        $this->db->where('tipe',"C2");
-        $C2 = $this->db->get('centroid_data')->row();
-
-        $totalBaris = count($data);
-
-        for ($i=0; $i < $totalBaris; $i++) { 
-            $hasilC1[$i] = round(sqrt((($C1->r-$data[$i]['r'])*($C1->r-$data[$i]['r'])) + (($C1->f-$data[$i]['f'])*($C1->f-$data[$i]['f'])) + (($C1->m-$data[$i]['m'])*($C1->m-$data[$i]['m']))),2);
-            $hasilC2[$i] = round(sqrt((($C2->r-$data[$i]['r'])*($C2->r-$data[$i]['r'])) + (($C2->f-$data[$i]['f'])*($C2->f-$data[$i]['f'])) + (($C2->m-$data[$i]['m'])*($C2->m-$data[$i]['m']))),2);
-               
-            $this->db->where('id_proses',$id_proses);
-            $this->db->where('nama_team',$team[$i]);
-            $getRowHasil = $this->db->get('hasil_rfm')->num_rows();
-
-            $this->db->set('id_proses',$id_proses);
-            $this->db->set('nama_team',$team[$i]);
-            $this->db->set('C1',is_nan($hasilC1[$i])?0:$hasilC1[$i]);
-            $this->db->set('C2',$hasilC2[$i]);
-            // print_r($data[$i]);
-            // echo "<br>M = {$total}<br>";
-            // echo $team[$i]."{$i} :<br>";
-            // echo "hasilC1 = {$hasilC1[$i]}<br>";
-            // echo "hasilC2 = {$hasilC2[$i]}<br>";
-            // print_r($data[$i]);
-            // print_r($C1);
-            //  echo "<br><br>";
-
-                if($hasilC1[$i] <= $hasilC2[$i]){
-                    $this->db->set('hasil','1');
-                    // echo "hasil akhir: 1<br><br>";
-                }else{
-                    $this->db->set('hasil','0');
-                    // echo "hasil akhir: 0<br><br>";
-                }
-
-                if($getRowHasil == 1){
-                    $this->db->where('id_proses',$id_proses);
-                    $this->db->where('nama_team',$team[$i]);
-                    $sql = $this->db->update('hasil_rfm');
-                }else{
-
-                    $sql = $this->db->insert('hasil_rfm');
-                }
-            }
-        // var_dump($hitung);
-        // return true;
+      if($status_proses == "Sudah diproses"){
             redirect(base_url('admin/KmeansHasil/index'."/".$id_proses));
-           
-    }
+      }else{
+          $getData =  $this->db->query("SELECT DISTINCT nama_team FROM data_rfm where id_proses='".$id_proses."'")->result();
+           //proses hitung kmeans
+            $this->db->where('id_proses',$id_proses);
+           $getProses = $this->db->get('data_proses')->row();
+           $tgl_proses = $getProses->tgl_proses;
+           // print_r($getData);
+           $totalM =[];
+           $totalR = [];
+           $totalF = [];
+           $team = [];
+           $no = 0;
+           $data = [];
+           $id_data = [];
+           foreach ($getData as $key) {
+               $team[$no] = $key->nama_team;
+               // echo "{$team[$no]}<br>";
+               // $this->db->where('nama_team','DINDIN');
+               $this->db->where('nama_team',$team[$no]);
+               $this->db->where('id_proses',$id_proses);
+               $getTeam = $this->db->get('data_rfm');
+               $rowTeam = $getTeam->result();
+                //total nilai M
+               $total = 0;
+               foreach ($rowTeam as $row) {
+                   $total = $total + $row->total_harga;
+               }
+               // echo "{$total}<br>"; 
+               $totalM[$no] = $this->bobotM($total);
+               //batas mencari total M
+
+               //mencari F
+               $rowTeam[$no] = $this->db->query("SELECT DISTINCT tgl FROM data_rfm WHERE nama_team = '".$team[$no]."' AND id_proses = '".$id_proses."'")->num_rows();
+                $totalF[$no] = $this->bobotF($rowTeam[$no]);
+               //Batas mencari F
+
+                //mencari R
+                $this->db->where('nama_team',$key->nama_team);
+                $this->db->where('id_proses',$id_proses);
+                $this->db->limit(1);
+                $this->db->order_by('tgl','DESC');
+                $getTanggal = $this->db->get('data_rfm')->row();
+
+                $nilaiR[$no] = $getTanggal->tgl;
+
+                $totalR[$no] = $this->bobotR($nilaiR[$no], $tgl_proses);
+                //batas R
+
+                //array
+                $data[$no] = array(
+                        'nama'=>$team[$no],
+                        'r'=>$totalR[$no],
+                        'f'=>$totalF[$no],
+                        'm'=>$totalM[$no]
+                        );
+                $no++;
+            }
+            //mengambil c1
+            $this->db->where('id_proses',$id_proses);
+            $this->db->where('tipe',"C1");
+            $C1 = $this->db->get('centroid_data')->row();
+            //mengambil c2
+            $this->db->where('id_proses',$id_proses);
+            $this->db->where('tipe',"C2");
+            $C2 = $this->db->get('centroid_data')->row();
+
+            $totalBaris = count($data);
+
+            for ($i=0; $i < $totalBaris; $i++) { 
+              $hasilC1[$i] = round(sqrt((($C1->r-$data[$i]['r'])*($C1->r-$data[$i]['r'])) + (($C1->f-$data[$i]['f'])*($C1->f-$data[$i]['f'])) + (($C1->m-$data[$i]['m'])*($C1->m-$data[$i]['m']))),2);
+              $hasilC2[$i] = round(sqrt((($C2->r-$data[$i]['r'])*($C2->r-$data[$i]['r'])) + (($C2->f-$data[$i]['f'])*($C2->f-$data[$i]['f'])) + (($C2->m-$data[$i]['m'])*($C2->m-$data[$i]['m']))),2);
+                 
+              $this->db->where('id_proses',$id_proses);
+              $this->db->where('nama_team',$team[$i]);
+              $getRowHasil = $this->db->get('hasil_rfm')->num_rows();
+
+              $this->db->set('id_proses',$id_proses);
+              $this->db->set('nama_team',$team[$i]);
+              $this->db->set('C1',is_nan($hasilC1[$i])?0:$hasilC1[$i]);
+              $this->db->set('C2',$hasilC2[$i]);
+
+              if($hasilC1[$i] <= $hasilC2[$i]){
+                  $this->db->set('hasil','1');
+              }else{
+                  $this->db->set('hasil','0');
+              }
+
+              if($getRowHasil == 1){
+                  $this->db->where('id_proses',$id_proses);
+                  $this->db->where('nama_team',$team[$i]);
+                  $sql = $this->db->update('hasil_rfm');
+              }else{
+
+                  $sql = $this->db->insert('hasil_rfm');
+              }
+            }//end proses hitung kmeans 
+
+            $this->db->set('status_proses','Sudah diproses');
+            $this->db->where('id_proses',$id_proses);
+            $this->db->update('data_proses');
+            redirect(base_url('admin/KmeansHasil/index'."/".$id_proses));
+        }
+     }
 }

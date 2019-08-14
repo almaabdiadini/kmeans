@@ -31,8 +31,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 <div class="message warning">
     <div class="inset">
         <div class="login-head">
-            <h1>Login Form</h1>
-            <div class="alert-close"> </div>
+            <center>
+            <img src="<?php echo base_url('assets/admin/login/logo.jpeg') ?>" width='100px'><h1>Login Form</h1>
+            </center><div class="alert-close"> </div>
         </div>
         <form method="post" action="">
                 <?php echo (isset($result)?'<li style="color:red;font-style: italic">'.$result.'</li>':'')?>
@@ -46,7 +47,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             <div class="clear"> </div>
             <div class="submit">
                 <input type="submit" value="Sign in" name="login">
-                <h4><a href="#">Lost your Password ?</a></h4>
+                <!-- <h4><a href="#">Lost your Password ?</a></h4> -->
                 <div class="clear">  </div>
             </div>
 
@@ -57,7 +58,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 <div class="clear"> </div>
 <!--- footer --->
 <div class="footer">
-    <p>Template by <a href="http://w3layouts.com">w3layouts</a></p>
+    <!-- <p>Template by <a href="http://w3layouts.com">w3layouts</a></p> -->
 </div>
 </body>
 </html>
