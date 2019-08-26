@@ -97,6 +97,7 @@ class Prosesdata extends Super
 
             // var_dump($csv); exit();
             $dateNow = date('Y-m-d H:i:s');
+            // var_dump($dateNow); die();
             $this->db->set('judul',$judul);
             $this->db->set('tgl_proses',$tgl_proses);
             $this->db->set('waktu_proses',$dateNow);
@@ -297,7 +298,7 @@ class Prosesdata extends Super
           $totalR2 = 0;
           $totalF2 = 0;
           $totalM2 = 0;
-
+          $this->db->where('id_proses',$id_proses);
           $getDataRFM = $this->db->get('data_bobot_rfm')->result();
           foreach ($getDataRFM as $key) {
               $hasilC1[$i] = $this->hitungC1($C1->r, $key->nilai_r, $C1->f, $key->nilai_f, $C1->m, $key->nilai_m);
@@ -379,7 +380,8 @@ class Prosesdata extends Super
               $this->db->set('hasil',$key['hasil']);
               $this->db->update('hasil_rfm');
             }
-          }*/foreach ($newIterasi as $key) {
+          }*/
+          foreach ($newIterasi as $key) {
               $this->db->where('nama_team',$key['nama_team']);
               $this->db->where('id_proses',$id_proses);
               $this->db->set('c12',$key['c1']);
