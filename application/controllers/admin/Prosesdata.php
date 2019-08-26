@@ -339,7 +339,7 @@ class Prosesdata extends Super
 
           $newIterasi = $this->iterasi2($id_proses, $newC1, $newC2);
 
-         /* if($newIterasi==$hasilIterasi){
+         // if($newIterasi==$hasilIterasi){
             $this->db->where('id_proses',$id_proses);
             $this->db->where('tipe','C1');
             $this->db->set('r2',$newC1['r']);
@@ -356,7 +356,7 @@ class Prosesdata extends Super
 
             
 
-          }else{
+         /* }else{
             $this->db->where('id_proses',$id_proses);
             $this->db->where('tipe','C1');
             $this->db->set('r2',$newC1['r']);
