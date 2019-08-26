@@ -80,20 +80,20 @@ class Diagram extends Super
         $data = array_merge($data,$this->generateData());
         $this->generate();
 
-        $this->db->where('hasil2','C1');
+        $this->db->where('hasil2',1);
         $this->db->where('id_proses',$id_proses);
         $data['totalLoyal'] = $this->db->get('hasil_rfm')->num_rows();
 
-        $this->db->where('hasil2','C2');
+        $this->db->where('hasil2',0);
         $this->db->where('id_proses',$id_proses);
         $data['totalTidakLoyal'] = $this->db->get('hasil_rfm')->num_rows();
 
-        $this->db->where('hasil2','C1');
+        $this->db->where('hasil2',1);
         $this->db->order_by('c21','ASC');
         $this->db->where('id_proses',$id_proses);
         $data['dataTeamLoyal'] = $this->db->get('hasil_rfm')->result();
 
-        $this->db->where('hasil2','c2');
+        $this->db->where('hasil2',0);
         $this->db->order_by('c22','ASC');
         $this->db->where('id_proses',$id_proses);
         $data['dataTeamTidakLoyal'] = $this->db->get('hasil_rfm')->result();
